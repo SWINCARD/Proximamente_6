@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ventana Estilo Windows</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: url('Cinnamoroll Gift.png') no-repeat center center fixed;
+            background-size: cover;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+        
+        .floating-gif {
+    position: fixed;
+    right: 50px;
+    width: 200px;
+    height: auto;
+    z-index: 999;
+    cursor: pointer;
+    transition: left 0.5s ease-in-out;
+}
+
+        .warning-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            display: none;
+            z-index: 1000;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes floatDown {
+            0% {
+                top: -200px;
+                transform: translateX(0) rotate(5deg);
+            }
+            20% {
+                transform: translateX(30px) rotate(-3deg);
+            }
+            40% {
+                transform: translateX(-20px) rotate(2deg);
+            }
+            60% {
+                transform: translateX(25px) rotate(-4deg);
+            }
+            80% {
+                transform: translateX(-15px) rotate(3deg);
+            }
+            100% {
+                top: 100vh;
+                transform: translateX(0) rotate(5deg);
+            }
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.3);
+            z-index: -1;
+        }
+
+        .window {
+            width: 800px;
+            height: 600px;
+            border: 5px solid #000;
+            border-radius: 15px;
+            box-shadow: 2px 2px 10px rgba(241, 241, 241, 0.1);
+            background-color: rgba(255, 255, 255, 0.95);
+            position: absolute;
+            display: none;
+            cursor: move;
+            animation: scaleIn 0.3s ease;
+            transform-origin: center center;
+            opacity: 0;
+        }
+
+        .window-active {
+            display: block;
+            animation: scaleIn 0.3s ease forwards;
+        }
+
+        .window-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #f382e2;
+            color: #f830c9;
+            padding: 5px 10px;
+            border-top-left-radius: 15px;
+            border-top-right-radius: 15px;
+        }
+
+        .window-header .title {
+            font-weight: bold;
+        }
+
+        .window-header .buttons {
+            display: flex;
+        }
+
+        .window-header .buttons div {
+            width: 26px;
+            height: 26px;
+            margin-left: 5px;
+            background-color: #f0f0f0;
+            border: 3px solid #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .window-header .bell-icon-container {
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+
+        .window-header .bell-icon {
+            width: 26px;
+            height: 26px;
+            background-color: #f0f0f0;
+            border: 3px solid #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            position: relative;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            margin-right: 10px;
+        }
+
+        .window-header .bell-icon::after {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background-color: red;
+            border-radius: 50%;
+            position: absolute;
+            top: 0;
+            right: 0;
+            transform: translate(50%, -50%);
+            display: none;
+        }
+
+        .window-header .bell-icon-notification::after {
+            display: block;
+        }
+
+        .window-header .bell-icon:hover {
+            background-color: #f382e2;
+            color: #fff;
+        }
+
+        .window-header .bell-icon-active {
+            background-color: #6ebf69;
+            color: #fff;
+        }
+
+        .window-header .bell-icon-active:hover {
+            background-color: #6ebf69;
+            color: #fff;
+        }
+
+        .window-header .notification-message {
+            display: none;
+            font-weight: bold;
+            color: #f382e2;
+        }
+
+        .window-header .notification-message-active {
+            display: block;
+        }
+
+        .window-content {
+            padding: 20px;
+            text-align: center;
+        }
+
+        .icons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 70px;
+            justify-items: center;
+            margin-top: 50px;
+        }
+
+        .icons img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 100px;
+            transition: box-shadow 0.3s ease;
+            cursor: pointer;
+        }
+
+        .icons img:hover {
+            box-shadow: 0 0 20px 10px rgba(255, 255, 0, 0.7);
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes shake {
+            0%, 100% {
+                transform: translateX(0);
+            }
+            25% {
+                transform: translateX(-5px);
+            }
+            75% {
+                transform: translateX(5px);
+            }
+        }
+
+        .bell-icon-notification {
+            animation: shake 0.5s;
+        }
+
+        .notification-popup {
+            display: none;
+            position: absolute;
+            top: 35px;
+            left: 0;
+            width: 250px;
+            padding: 10px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <!-- GIF flotante -->
+    <img src="Cinnamoroll Gift 3.gif" alt="Cinnamoroll flotante" class="floating-gif">
+    
+    <!-- Mensaje de advertencia -->
+    <div class="warning-message" id="warningMessage">
+        Ups!, Debiste darle Click a Cinnamoroll, debes estar pendiente 🚨
+    </div>
+
+    <div class="window window-active">
+        <div class="window-header">
+            <div class="bell-icon-container">
+                <div class="bell-icon" onclick="toggleNotification()">
+                    🔔
+                </div>
+                <div class="notification-message">Tienes una notificación</div>
+                <div class="notification-popup" id="notificationPopup">
+                    <p id="notificationText"></p>
+                </div>
+            </div>
+            <div class="title">Ventana Principal</div>
+            <div class="buttons">
+                <div>-</div>
+                <div>□</div>
+                <div>×</div>
+            </div>
+        </div>
+        <div class="window-content">
+            <p>Este es un contenido de ejemplo dentro de la ventana estilo Windows.</p>
+            <div class="icons">
+                <img src="Cinnamoroll 3.png" alt="Imagen 1" onclick="openWindow('window1')">
+                <img src="Cinnamoroll 2.png" alt="Imagen 2" onclick="openWindow('window2')">
+                <img src="Cinnamoroll 6.png" alt="Imagen 3" onclick="openWindow('window3')">
+                <img src="Cinnamoroll 5.png" alt="Imagen 4" onclick="openWindow('window4')">
+                <img src="Cinnamoroll 4.png" alt="Imagen 5" onclick="openWindow('window5')">
+                <img src="Cinnamoroll 1.png" alt="Imagen 6" onclick="openWindow('window6')">
+            </div>
+        </div>
+    </div>
+
+    <div class="window" id="window1">
+        <div class="window-header">
+            <div class="title">Ventana 1</div>
+            <div class="buttons">
+                <div onclick="closeWindow('window1')">-</div>
+                <div onclick="closeWindow('window1')">□</div>
+                <div onclick="closeWindow('window1')">×</div>
+            </div>
+        </div>
+        <div class="window-content">
+            <p>Este es el contenido de la ventana 1.</p>
+        </div>
+    </div>
+
+    <div class="window" id="window2">
+        <div class="window-header">
+            <div class="title">Ventana 2</div>
+            <div class="buttons">
+                <div onclick="closeWindow('window2')">-</div>
+                <div onclick="closeWindow('window2')">□</div>
+                <div onclick="closeWindow('window2')">×</div>
+            </div>
+        </div>
+        <div class="window-content">
+            <p>Este es el contenido de la ventana 2.</p>
+        </div>
+    </div>
+
+    <div class="window" id="window3">
+        <div class="window-header">
+            <div class="title">Ventana 3</div>
+            <div class="buttons">
+                <div onclick="closeWindow('window3')">-</div>
+                <div onclick="closeWindow('window3')">□</div>
+                <div onclick="closeWindow('window3')">×</div>
+            </div>
+        </div>
+        <div class="window-content">
+            <p>Este es el contenido de la ventana 3.</p>
+        </div>
+    </div>
+
+    <div class="window" id="window4">
+        <div class="window-header">
+            <div class="title">Ventana 4</div>
+            <div class="buttons">
+                <div onclick="closeWindow('window4')">-</div>
+                <div onclick="closeWindow('window4')">□</div>
+                <div onclick="closeWindow('window4')">×</div>
+            </div>
+        </div>
+        <div class="window-content">
+            <p>Este es el contenido de la ventana 4.</p>
+        </div>
+    </div>
+
+    <div class="window" id="window5">
+        <div class="window-header">
+            <div class="title">Ventana 5</div>
+            <div class="buttons">
+                <div onclick="closeWindow('window5')">-</div>
+                <div onclick="closeWindow('window5')">□</div>
+                <div onclick="closeWindow('window5')">×</div>
+            </div>
+        </div>
+        <div class="window-content">
+            <p>Este es el contenido de la ventana 5.</p>
+        </div>
+    </div>
+
+    <div class="window" id="window6">
+        <div class="window-header">
+            <div class="title">Ventana 6</div>
+            <div class="buttons">
+                <div onclick="closeWindow('window6')">-</div>
+                <div onclick="closeWindow('window6')">□</div>
+                <div onclick="closeWindow('window6')">×</div>
+            </div>
+        </div>
+        <div class="window-content">
+            <p>Este es el contenido de la ventana 6.</p>
+        </div>
+    </div>
+
+    <script>
+        let activeWindow = null;
+        let offsetX = 0;
+        let offsetY = 0;
+        let notificationAudio = null;
+        let bellIcon = null;
+        let notificationMessage = null;
+        let stopAudioTimeout = null;
+
+        // Variables para el GIF y sus nuevas funcionalidades
+        let gifSpeed = 5; // Velocidad inicial
+        let hasEscaped = false; // Control para el esquivo
+        let gifElement = document.querySelector('.floating-gif');
+        let warningMessage = document.getElementById('warningMessage');
+        let isFirstAnimation = true;
+
+        // Función para mostrar el mensaje de advertencia
+        function showWarningMessage() {
+            warningMessage.style.display = 'block';
+            setTimeout(() => {
+                warningMessage.style.display = 'none';
+            }, 5000); // El mensaje se muestra por 5 segundos
+        }
+
+        // Función para iniciar la animación del GIF
+        function startGifAnimation() {
+            gifElement.style.animation = `floatDown ${gifSpeed}s ease-in-out`;
+            gifElement.style.display = 'block'; // Aseguramos que el GIF sea visible
+            
+            if (isFirstAnimation) {
+                // Después de 15 segundos en la primera animación
+                setTimeout(() => {
+                    gifElement.style.animation = 'none';
+                    showWarningMessage();
+                    
+                    // Después de 8 segundos, ocultar el GIF
+                    setTimeout(() => {
+                        gifElement.style.display = 'none'; // Oculta el GIF
+                    }, 8000);
+                }, 5000);
+            }
+        }
+
+                    // Detectar cuando el mouse se acerca al GIF
+                    gifElement.addEventListener('mouseover', function(e) {
+                    if (Date.now() - startTime > 5000) { // Si han pasado 5 segundos
+                        // Calcula una nueva posición aleatoria
+                        const newPosition = Math.random() * (window.innerWidth - 200); // 200 es el ancho del GIF
+                        this.style.right = 'auto';
+                        this.style.left = `${newPosition}px`;
+                    }
+                    });
+
+                    // Iniciar la primera animación cuando la página carga
+                    document.addEventListener('DOMContentLoaded', function() {
+                    const startTime = Date.now(); // Guardar el tiempo de inicio
+                    startGifAnimation();
+                    });
+
+        function openWindow(windowId) {
+            if (activeWindow) {
+                activeWindow.classList.remove('window-active');
+            }
+
+            let window = document.getElementById(windowId);
+            window.classList.add('window-active');
+            activeWindow = window;
+
+            window.style.left = `${window.getBoundingClientRect().left}px`;
+            window.style.top = `${window.getBoundingClientRect().top}px`;
+
+            let header = window.querySelector('.window-header');
+            header.addEventListener('mousedown', startDrag);
+
+            window.style.zIndex = '1000';
+        }
+
+        function closeWindow(windowId) {
+            let window = document.getElementById(windowId);
+            window.classList.remove('window-active');
+            activeWindow = null;
+        }
+
+        function startDrag(e) {
+            let header = e.target.closest('.window-header');
+            if (!header) return;
+
+            activeWindow.style.zIndex = '1000';
+            offsetX = e.clientX - activeWindow.getBoundingClientRect().left;
+            offsetY = e.clientY - activeWindow.getBoundingClientRect().top;
+
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('mouseup', stopDrag);
+        }
+
+        function drag(e) {
+            activeWindow.style.left = e.clientX - offsetX + 'px';
+            activeWindow.style.top = e.clientY - offsetY + 'px';
+        }
+
+        function stopDrag() {
+            document.removeEventListener('mousemove', drag);
+            document.removeEventListener('mouseup', stopDrag);
+        }
+
+        function toggleNotification() {
+            if (!notificationAudio) {
+                notificationAudio = new Audio('Bokachan.mp3');
+
+                notificationAudio.addEventListener('ended', function() {
+                    bellIcon.classList.remove('bell-icon-active');
+                    notificationMessage.classList.remove('notification-message-active');
+                    hideNotificationPopup();
+                });
+            }
+
+            if (notificationAudio.paused) {
+                notificationAudio.play();
+                bellIcon.classList.add('bell-icon-active');
+                bellIcon.classList.remove('bell-icon-notification');
+                notificationMessage.classList.add('notification-message-active');
+                showNotificationPopup();
+                stopAudioTimeout = setTimeout(function() {
+                    notificationAudio.pause();
+                    notificationAudio.currentTime = 0;
+                    bellIcon.classList.remove('bell-icon-active');
+                    notificationMessage.classList.remove('notification-message-active');
+                    hideNotificationPopup();
+                }, 10000);
+            } else {
+                notificationAudio.pause();
+                notificationAudio.currentTime = 0;
+                bellIcon.classList.remove('bell-icon-active');
+                notificationMessage.classList.remove('notification-message-active');
+                hideNotificationPopup();
+                clearTimeout(stopAudioTimeout);
+            }
+        }
+
+        function showNotificationPopup() {
+            const message = "Boka 🥰 chan 🥺 ga 🤔 oshiete 😨 kureta 🤗 ironna 😘 mita 😋 meni 😉 narera 🤬 puninan 🤭 ndatte 😖 Tore Tore! :3 HAHAH💕 Kawai! :3";
+    const notificationPopup = document.getElementById('notificationPopup');
+    const notificationText = document.getElementById('notificationText');
+    notificationPopup.style.display = 'block';
+    notificationText.innerHTML = '';
+
+    let index = 0;
+
+    function typeLetter() {
+        if (index < message.length) {
+            notificationText.innerHTML += message[index];
+            index++;
+            setTimeout(typeLetter, 55); // Ajusta la velocidad de aparición de las letras
+        }
+    }
+
+    typeLetter();
+}
+
+function hideNotificationPopup() {
+    const notificationPopup = document.getElementById('notificationPopup');
+    notificationPopup.style.display = 'none';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Obtener el ícono de la campana
+    bellIcon = document.querySelector('.bell-icon');
+    notificationMessage = document.querySelector('.notification-message');
+
+    // Añadir punto rojo y mensaje de notificación después de 3 segundos
+    setTimeout(function() {
+        bellIcon.classList.add('bell-icon-notification');
+        notificationMessage.classList.add('notification-message-active');
+    }, 3000);
+});
+</script>
+</body>
+</html>

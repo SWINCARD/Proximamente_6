@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ventana Estilo Windows</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: url('Cinnamoroll Gift.png') no-repeat center center fixed; /* Añadir GIF de fondo */
+            background-size: cover; /* Ajustar tamaño del GIF de fondo */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .window {
+            width: 800px; /* Aumenta el tamaño de la ventana */
+            height: 600px; /* Aumenta el tamaño de la ventana */
+            border: 5px solid #000; /* Bordes más gruesos */
+            border-radius: 15px; /* Bordes redondeados */
+            box-shadow: 2px 2px 10px rgba(241, 241, 241, 0.1);
+            background-color: #fff;
+            position: absolute; /* Cambiado a absolute para el arrastre */
+            display: none; /* Ocultar ventanas por defecto */
+            cursor: move; /* Cursor para arrastrar */
+            animation: scaleIn 0.3s ease; /* Animación de entrada */
+            transform-origin: center center; /* Origen de la transformación en el centro */
+            opacity: 0; /* Inicialmente transparente */
+        }
+        .window-active {
+            display: block; /* Mostrar cuando esté activa */
+            animation: scaleIn 0.3s ease forwards; /* Animación de entrada */
+        }
+        .window-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #f382e2;
+            color: #f830c9;
+            padding: 5px 10px;
+            border-top-left-radius: 15px; /* Bordes redondeados para la parte superior */
+            border-top-right-radius: 15px;
+        }
+        .window-header .title {
+            font-weight: bold;
+        }
+        .window-header .buttons {
+            display: flex;
+        }
+        .window-header .buttons div {
+            width: 26px;
+            height: 26px;
+            margin-left: 5px;
+            background-color: #f0f0f0;
+            border: 3px solid #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+        .window-header .bell-icon-container {
+            display: flex;
+            align-items: center;
+            position: relative; /* Para el posicionamiento de la ventana emergente */
+        }
+        .window-header .bell-icon {
+            width: 26px;
+            height: 26px;
+            background-color: #f0f0f0;
+            border: 3px solid #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            position: relative; /* Posicionamiento relativo para el punto rojo */
+            transition: background-color 0.3s ease, color 0.3s ease; /* Transición para cambio de color */
+            margin-right: 10px; /* Espacio entre la campana y el mensaje */
+        }
+        .window-header .bell-icon::after {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background-color: red;
+            border-radius: 50%;
+            position: absolute;
+            top: 0;
+            right: 0;
+            transform: translate(50%, -50%);
+            display: none; /* Ocultar por defecto */
+        }
+        .window-header .bell-icon-notification::after {
+            display: block; /* Mostrar punto rojo cuando hay notificación */
+        }
+        .window-header .bell-icon:hover {
+            background-color: #f382e2;
+            color: #fff;
+        }
+        .window-header .bell-icon-active {
+            background-color: #6ebf69; /* Color activo */
+            color: #fff;
+        }
+        .window-header .bell-icon-active:hover {
+            background-color: #6ebf69; /* Mantener color activo al hacer hover */
+            color: #fff;
+        }
+        .window-header .notification-message {
+            display: none;
+            font-weight: bold;
+            color: #f382e2;
+        }
+        .window-header .notification-message-active {
+            display: block;
+        }
+        .window-content {
+            padding: 20px;
+            text-align: center;
+        }
+        .icons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 70px; /* Aumenta el espacio entre las imágenes */
+            justify-items: center;
+            margin-top: 50px;
+        }
+        .icons img {
+            width: 100px; /* Ajusta el tamaño de las imágenes */
+            height: 100px;
+            object-fit: cover; /* Ajusta la imagen para que cubra el espacio del contenedor */
+            border-radius: 100px; /* Añade esquinas redondeadas si es necesario */
+            transition: box-shadow 0.3s ease; /* Transición para el efecto de brillo */
+            cursor: pointer; /* Cursor en forma de mano */
+        }
+        .icons img:hover {
+            box-shadow: 0 0 20px 10px rgba(255, 255, 0, 0.7); /* Efecto de brillo */
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes shake {
+            0%, 100% {
+                transform: translateX(0);
+            }
+            25% {
+                transform: translateX(-5px);
+            }
+            75% {
+                transform: translateX(5px);
+            }
+        }
+
+        .bell-icon-notification {
+            animation: shake 0.5s;
+        }
+
+        .notification-popup {
+            display: none;
+            position: absolute;
+            top: 35px; /* Ajustar para posicionar debajo de la campana */
+            left: 0;
+            width: 250px;
+            padding: 10px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div class="window window-active"> <!-- Añadido class="window-active" para mostrarla por defecto -->
+        <div class="window-header">
+            <div class="bell-icon-container">
+                <div class="bell-icon" onclick="toggleNotification()">
+                    🔔
+                </div>
+                <div class="notification-message">Tienes una notificación</div>
+                <div class="notification-popup" id="notificationPopup">
+                    <p id="notificationText"></p>
+                </div>
+            </div>
+            <div class="title">Ventana Principal</div>
+            <div class="buttons">
+                <div>-</div>
+                <div>□</div>
+                <div>×</div>
+            </div>
+        </div>
+        <div class="window-content">
+            <p>Este es un contenido de ejemplo dentro de la ventana estilo Windows.</p>
+            <div class="icons">
+                <img src="Cinnamoroll 3.png" alt="Imagen 1" onclick="openWindow('window1')">
+                <img src="Cinnamoroll 2.png" alt="Imagen 2" onclick="openWindow('window2')">
+                <img src="Cinnamoroll 6.png" alt="Imagen 3" onclick="openWindow('window3')">
+                <img src="Cinnamoroll 5.png" alt="Imagen 4" onclick="openWindow('window4')">
+                <img src="Cinnamoroll 4.png" alt="Imagen 5" onclick="openWindow('window5')">
+                <img src="Cinnamoroll 1.png" alt="Imagen 6" onclick="openWindow('window6')">
+            </div>
+        </div>
+    </div>
+
+    <div class="window" id="window1">
+        <div class="window-header">
+            <div class="title">Ventana 1</div>
+            <div class="buttons">
+                <div onclick="closeWindow('window1')">-</div>
+                <div onclick="closeWindow('window1')">□</div>
+                <div onclick="closeWindow('window1')">×</div>
+            </div>
+        </div>
+        <div class="window-content">
+            <p>Este es el contenido de la ventana 1.</p>
+        </div>
+    </div>
+
+    <div class="window" id="window2">
+        <div class="window-header">
+            <div class="title">Ventana 2</div>
+            <div class="buttons">
+                <div onclick="closeWindow('window2')">-</div>
+                <div onclick="closeWindow('window2')">□</div>
+                <div onclick="closeWindow('window2')">×</div>
+            </div>
+        </div>
+        <div class="window-content">
+            <p>Este es el contenido de la ventana 2.</p>
+        </div>
+    </div>
+
+    <div class="window" id="window3">
+        <div class="window-header">
+            <div class="title">Ventana 3</div>
+            <div class="buttons">
+                <div onclick="closeWindow('window3')">-</div>
+                <div onclick="closeWindow('window3')">□</div>
+                <div onclick="closeWindow('window3')">×</div>
+            </div>
+        </div>
+        <div class="window-content">
+            <p>Este es el contenido de la ventana 3.</p>
+        </div>
+    </div>
+
+    <div class="window" id="window4">
+        <div class="window-header">
+            <div class="title">Ventana 4</div>
+            <div class="buttons">
+                <div onclick="closeWindow('window4')">-</div>
+                <div onclick="closeWindow('window4')">□</div>
+                <div onclick="closeWindow('window4')">×</div>
+            </div>
+        </div>
+        <div class="window-content">
+            <p>Este es el contenido de la ventana 4.</p>
+        </div>
+    </div>
+
+    <div class="window" id="window5">
+        <div class="window-header">
+            <div class="title">Ventana 5</div>
+            <div class="buttons">
+                <div onclick="closeWindow('window5')">-</div>
+                <div onclick="closeWindow('window5')">□</div>
+                <div onclick="closeWindow('window5')">×</div>
+            </div>
+        </div>
+        <div class="window-content">
+            <p>Este es el contenido de la ventana 5.</p>
+        </div>
+    </div>
+
+    <div class="window" id="window6">
+        <div class="window-header">
+            <div class="title">Ventana 6</div>
+            <div class="buttons">
+                <div onclick="closeWindow('window6')">-</div>
+                <div onclick="closeWindow('window6')">□</div>
+                <div onclick="closeWindow('window6')">×</div>
+            </div>
+        </div>
+        <div class="window-content">
+            <p>Este es el contenido de la ventana 6.</p>
+        </div>
+    </div>
+
+    <script>
+        let activeWindow = null;
+        let offsetX = 0;
+        let offsetY = 0;
+        let notificationAudio = null;
+        let bellIcon = null;
+        let notificationMessage = null;
+        let stopAudioTimeout = null;
+
+        function openWindow(windowId) {
+            // Ocultar ventana activa si hay alguna
+            if (activeWindow) {
+                activeWindow.classList.remove('window-active');
+            }
+
+            // Mostrar la ventana solicitada
+            let window = document.getElementById(windowId);
+            window.classList.add('window-active');
+            activeWindow = window;
+
+            // Ajustar posición inicial de la ventana abierta
+            window.style.left = `${window.getBoundingClientRect().left}px`;
+            window.style.top = `${window.getBoundingClientRect().top}px`;
+
+            // Agregar event listeners para arrastrar
+            let header = window.querySelector('.window-header');
+            header.addEventListener('mousedown', startDrag);
+
+            // Asegurar que la ventana activa esté en la parte superior
+            window.style.zIndex = '1000';
+        }
+
+        function closeWindow(windowId) {
+            let window = document.getElementById(windowId);
+            window.classList.remove('window-active');
+            activeWindow = null;
+        }
+
+        function startDrag(e) {
+            let header = e.target.closest('.window-header');
+            if (!header) return;
+
+            activeWindow.style.zIndex = '1000'; // Asegura que la ventana arrastrada esté por encima
+            offsetX = e.clientX - activeWindow.getBoundingClientRect().left;
+            offsetY = e.clientY - activeWindow.getBoundingClientRect().top;
+
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('mouseup', stopDrag);
+        }
+
+        function drag(e) {
+            activeWindow.style.left = e.clientX - offsetX + 'px';
+            activeWindow.style.top = e.clientY - offsetY + 'px';
+        }
+
+        function stopDrag() {
+            document.removeEventListener('mousemove', drag);
+            document.removeEventListener('mouseup', stopDrag);
+        }
+
+        function toggleNotification() {
+            if (!notificationAudio) {
+                // Crear elemento de audio si no existe
+                notificationAudio = new Audio('Bokachan.mp3'); // Ruta al archivo de audio
+
+                // Agregar event listener para el final del audio
+                notificationAudio.addEventListener('ended', function() {
+                    bellIcon.classList.remove('bell-icon-active');
+                    notificationMessage.classList.remove('notification-message-active');
+                    hideNotificationPopup();
+                });
+            }
+
+            if (notificationAudio.paused) {
+                // Reproducir audio y cambiar el estado del ícono de campana
+                notificationAudio.play();
+                bellIcon.classList.add('bell-icon-active');
+                bellIcon.classList.remove('bell-icon-notification'); // Eliminar punto rojo
+                notificationMessage.classList.add('notification-message-active');
+                showNotificationPopup();
+                // Detener el audio después de 7 segundos
+                stopAudioTimeout = setTimeout(function() {
+                    notificationAudio.pause();
+                    notificationAudio.currentTime = 0; // Reiniciar audio al inicio
+                    bellIcon.classList.remove('bell-icon-active');
+                    notificationMessage.classList.remove('notification-message-active');
+                    hideNotificationPopup();
+                }, 10000); // 10000 milisegundos = 10 segundos
+            } else {
+                // Pausar audio y restaurar estado del ícono de campana
+                notificationAudio.pause();
+                notificationAudio.currentTime = 0; // Reiniciar audio al inicio
+                bellIcon.classList.remove('bell-icon-active');
+                notificationMessage.classList.remove('notification-message-active');
+                hideNotificationPopup();
+                clearTimeout(stopAudioTimeout); // Cancelar el timeout si se detiene manualmente
+            }
+        }
+
+        function showNotificationPopup() {
+            const message = "Boka 🥰 chan 🥺 ga 🤔 oshiete 😨 kureta 🤗 ironna 😘 mita 😋 meni 😉 narera 🤬 puninan 🤭 ndatte 😖 Tore Tore! :3 HAHAH💕 Kawai! :3";
+            const notificationPopup = document.getElementById('notificationPopup');
+            const notificationText = document.getElementById('notificationText');
+            notificationPopup.style.display = 'block';
+            notificationText.innerHTML = '';
+
+            let index = 0;
+
+            function typeLetter() {
+                if (index < message.length) {
+                    notificationText.innerHTML += message[index];
+                    index++;
+                    setTimeout(typeLetter, 55); // Ajusta la velocidad de aparición de las letras
+                }
+            }
+
+            typeLetter();
+        }
+
+        function hideNotificationPopup() {
+            const notificationPopup = document.getElementById('notificationPopup');
+            notificationPopup.style.display = 'none';
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Obtener el ícono de la campana
+            bellIcon = document.querySelector('.bell-icon');
+            notificationMessage = document.querySelector('.notification-message');
+
+            // Añadir punto rojo y mensaje de notificación después de 3 segundos
+            setTimeout(function() {
+                bellIcon.classList.add('bell-icon-notification');
+                notificationMessage.classList.add('notification-message-active');
+            }, 3000);
+        });
+    </script>
+</body>
+</html>
